@@ -32,6 +32,7 @@ directory node.quagga.dir do
 end
 
 service 'quagga' do
+  supports status: true, restart: true, reload: true
   action :enable
 end
 
@@ -51,15 +52,6 @@ if %w( debian ubuntu ).include? node.platform
     mode '0644'
   end
 
-  %w( zebra.conf ospfd.conf bgpd.conf ).each do |file|
-    file "#{node.quagga.dir}/#{file}" do
-      owner node.quagga.user
-      group node.quagga.group
-      mode '0644'
-      action :touch
-    end
-  end
-
   template '/etc/default/quagga' do
     source 'quagga.erb'
     owner 'root'
@@ -77,11 +69,6 @@ template "#{node.quagga.dir}/vtysh.conf" do
   mode '0644'
   # restart needed?
   notifies :restart, 'service[quagga]', :delayed unless integrated_config
-end
-
-service 'quagga' do
-  supports status: true, restart: true, reload: true
-  action [:nothing]
 end
 
 # Combine the templates into a master file to be reloaded
